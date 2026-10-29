@@ -57,6 +57,37 @@
       gap: 1.25rem;
     }
 
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 1rem;
+      background: var(--pine);
+      color: var(--on-pine);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-icon svg {
+      width: 1.75rem;
+      height: 1.75rem;
+    }
+
+    .brand p {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: var(--pine);
+    }
+
     h1 {
       margin: 0;
       font-size: 2rem;
@@ -306,8 +337,18 @@
 <body>
   <main>
     <header>
-      <h1>這支手機可以參加研究嗎？</h1>
-      <p class="lead">請按下面的按鈕，檢查手機感應器。</p>
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <rect x="7" y="2" width="10" height="20" rx="2" />
+            <path d="M12 18h.01" />
+          </svg>
+        </span>
+        <p>研究招募用</p>
+      </div>
+      <h1 style="margin-top:1rem">這手機可以參加研究嗎？</h1>
+      <p class="lead" style="margin-top:1rem">請按下面的按鈕，檢查手機感應器。</p>
     </header>
 
     <p id="embeddedNote" class="note note-warn" hidden>
@@ -486,7 +527,7 @@
         if (state.phase === "incomplete") {
           return {
             title: "尚未完成檢查",
-            detail: "請按「允許 / Allow」，再按開始檢查。",
+            detail: "",
             tone: "incomplete"
           };
         }
@@ -556,7 +597,7 @@
 
         $("hintText").textContent =
           state.phase === "checking" ? "請稍候..." :
-            state.phase === "incomplete" ? "請按「允許 / Allow」後再試。" :
+            state.phase === "incomplete" ? "請按「允許 / Allow」以手機檢查感應器" :
               state.phase === "done" ? "可按「詳細資料」看 X Y Z。" :
                 "如果手機詢問權限，請按「允許」。";
 
@@ -710,6 +751,12 @@
       }
 
       function startCheck() {
+        // After permission denied, reload so the next gesture can re-request cleanly
+        if (state.phase === "incomplete") {
+          window.location.reload();
+          return;
+        }
+
         stopAll();
         state.openKey = null;
         state.permissionNote = null;
@@ -791,7 +838,7 @@
               magnetometer: { status: "pending" },
               accelerometer: { status: "pending" }
             };
-            state.permissionNote = "請按「允許 / Allow」，再按開始檢查。";
+            state.permissionNote = "請按「允許 / Allow」以手機檢查感應器";
             render();
             return;
           }
