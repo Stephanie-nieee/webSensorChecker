@@ -328,8 +328,20 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .details-panel.open {
-      display: flex;
+    .directions-container {
+      width: 100%;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .directions-img {
+      width: 90%;
+      max-width: 280px;
+      height: auto;
+      border-radius: 12px;
+      display: block;
+      margin: 0 auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
   </style>
 </head>
@@ -362,6 +374,10 @@
     <p class="hint" id="hintText">如果手機詢問權限，請按「允許」。</p>
     <div class="progress" id="progressBar" hidden><span></span></div>
     <p id="permissionNote" class="note note-error" hidden></p>
+
+    <div class="directions-container">
+      <img src="directions.jpg" alt="檢測指引" class="directions-img" />
+    </div>
 
     <section class="verdict" id="verdictBox">
       <p class="label">判定</p>
@@ -598,7 +614,7 @@
         $("hintText").textContent =
           state.phase === "checking" ? "請稍候..." :
             state.phase === "incomplete" ? "請按「允許 / Allow」以手機檢查感應器" :
-              state.phase === "done" ? "可按「詳細資料」看 X Y Z。" :
+              state.phase === "done" ? "" :
                 "如果手機詢問權限，請按「允許」。";
 
         $("progressBar").hidden = state.phase !== "checking";
