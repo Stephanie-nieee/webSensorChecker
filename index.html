@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1b4d43" />
+  <meta name="description" content="檢查手機有沒有陀螺儀、磁力計同加速度計，用嚟確認可唔可以加入研究。" />
+  <title>手機感應器檢查</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --paper: #f3efe6;
+      --card: #fffdf8;
+      --ink: #1c1915;
+      --muted: #5c564c;
+      --line: #e3d8c6;
+      --pine: #1b4d43;
+      --pine-soft: #e6f2ee;
+      --on-pine: #f3faf7;
+      --yes: #0e6a3a;
+      --yes-bg: #e3f6ea;
+      --no: #a31d2c;
+      --no-bg: #fdecee;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      color-scheme: light;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      line-height: 1.5;
+    }
+
+    button:not(:disabled),
+    summary {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid var(--pine);
+      outline-offset: 3px;
+    }
+
+    main {
+      max-width: 36rem;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 1rem;
+      background: var(--pine);
+      color: var(--on-pine);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-icon svg {
+      width: 1.75rem;
+      height: 1.75rem;
+    }
+
+    .brand p {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: var(--pine);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.25rem;
+      font-weight: 700;
+      line-height: 1.2;
+      text-wrap: balance;
+    }
+
+    .lead {
+      margin: 0;
+      font-size: 1.25rem;
+      color: var(--muted);
+      text-wrap: pretty;
+    }
+
+    .note {
+      margin: 0;
+      padding: 1rem 1.25rem;
+      border-radius: 1rem;
+      font-size: 1.25rem;
+      line-height: 1.5;
+    }
+
+    .note-warn {
+      background: var(--pine-soft);
+      color: var(--pine);
+    }
+
+    .note-error {
+      background: var(--no-bg);
+      color: var(--no);
+    }
+
+    .primary-btn {
+      min-height: 4rem;
+      width: 100%;
+      border: none;
+      border-radius: 1rem;
+      background: var(--pine);
+      color: var(--on-pine);
+      font: inherit;
+      font-size: 1.5rem;
+      font-weight: 700;
+      padding: 1rem 1.5rem;
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .hint {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .progress {
+      height: 0.75rem;
+      border-radius: 999px;
+      background: var(--line);
+      overflow: hidden;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      width: 100%;
+      background: var(--pine);
+      transform-origin: left center;
+      animation: fill 3s linear forwards;
+    }
+
+    @keyframes fill {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .progress > span {
+        animation: none;
+        transform: scaleX(1);
+      }
+    }
+
+    .verdict {
+      border: 2px solid var(--line);
+      background: var(--card);
+      border-radius: 1.5rem;
+      padding: 1.5rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .verdict.yes {
+      border-color: var(--yes);
+      background: var(--yes-bg);
+    }
+
+    .verdict.no {
+      border-color: var(--no);
+      background: var(--no-bg);
+    }
+
+    .verdict.checking {
+      border-color: var(--pine);
+      background: var(--pine-soft);
+    }
+
+    .verdict .label {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .verdict .title {
+      margin: 0;
+      font-size: 2.25rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .verdict.yes .title { color: var(--yes); }
+    .verdict.no .title { color: var(--no); }
+    .verdict.checking .title { color: var(--pine); }
+
+    .verdict .detail {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .info-card,
+    .sensor-card,
+    .researcher {
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 1.5rem;
+      padding: 1rem 1.25rem;
+    }
+
+    .info-card .k {
+      margin: 0;
+      font-size: 1.125rem;
+      color: var(--muted);
+    }
+
+    .info-card .en {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--muted);
+    }
+
+    .info-card .v {
+      margin: 0.25rem 0 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .info-card .hint-line {
+      margin: 0.25rem 0 0;
+      font-size: 1.125rem;
+      color: var(--muted);
+    }
+
+    .section-label {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .sensor-card {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 0.75rem;
+    }
+
+    .sensor-head {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .sensor-icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 1rem;
+      background: var(--pine-soft);
+      color: var(--pine);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .sensor-icon svg {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+
+    .sensor-head h3 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .sensor-head p {
+      margin: 0;
+      font-size: 1.125rem;
+      color: var(--muted);
+    }
+
+    .sensor-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 3rem;
+      padding: 0 1rem;
+      border-radius: 999px;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .pill-yes { background: var(--yes-bg); color: var(--yes); }
+    .pill-no { background: var(--no-bg); color: var(--no); }
+    .pill-checking { background: var(--pine-soft); color: var(--pine); }
+    .pill-pending { background: var(--paper); color: var(--muted); font-weight: 600; }
+
+    .details-btn {
+      min-height: 3rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--ink);
+      font: inherit;
+      font-size: 1.25rem;
+      font-weight: 600;
+      padding: 0 1.25rem;
+    }
+
+    .details-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .details-panel {
+      border-top: 1px solid var(--line);
+      padding-top: 1rem;
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .details-panel.open {
+      display: flex;
+    }
+
+    .details-panel p {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .meter {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      border-bottom: 1px solid var(--line);
+      padding: 0.75rem 0;
+      font-size: 1.25rem;
+    }
+
+    .meter .num {
+      font-size: 1.875rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .meter .unit {
+      margin-left: 0.5rem;
+      font-size: 1.125rem;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    .level,
+    .compass {
+      width: 10rem;
+      height: 10rem;
+      margin: 0 auto;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .level-dot {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      background: var(--pine);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      margin-left: -1rem;
+      margin-top: -1rem;
+      transform: translate(0, 0);
+    }
+
+    .level-center {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 999px;
+      background: var(--line);
+    }
+
+    .compass-label {
+      position: absolute;
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .compass-label.n { top: 0.5rem; }
+    .compass-label.s { bottom: 0.5rem; color: var(--muted); font-weight: 400; }
+
+    .compass-needle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .compass-needle .north {
+      width: 0.375rem;
+      height: 3.5rem;
+      border-radius: 999px;
+      background: var(--no);
+    }
+
+    .compass-needle .hub {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 999px;
+      background: var(--ink);
+    }
+
+    .compass-needle .south {
+      width: 0.375rem;
+      height: 2.5rem;
+      border-radius: 999px;
+      background: var(--pine);
+    }
+
+    .heading-num {
+      margin: 0;
+      text-align: center;
+      font-size: 2.25rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .researcher summary {
+      font-size: 1.25rem;
+      font-weight: 600;
+      list-style: none;
+    }
+
+    .researcher summary::-webkit-details-marker { display: none; }
+
+    .researcher .body {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 1.125rem;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .researcher .body p { margin: 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="7" y="2" width="10" height="20" rx="2" />
+            <path d="M12 18h.01" />
+          </svg>
+        </span>
+        <p>研究招募用</p>
+      </div>
+      <h1 style="margin-top:1rem">這支手機可以加入研究嗎？</h1>
+      <p class="lead" style="margin-top:1rem">
+        檢查三樣感應器：陀螺儀、磁力計、加速度計。數字只留在您的手機上，不會上傳。
+      </p>
+    </header>
+
+    <p id="embeddedNote" class="note note-warn" hidden>
+      這是預覽小窗，感應器可能讀不到。請用手機的 Chrome 或 Safari 直接打開這個網頁。
+    </p>
+    <p id="insecureNote" class="note note-error" hidden>
+      這個網址不安全。請改用 https 開頭的網址，手機才允許讀取感應器。
+    </p>
+
+    <button type="button" class="primary-btn" id="startBtn">開始檢查</button>
+    <p class="hint" id="hintText" aria-live="polite">
+      請用手機的 Chrome 或 Safari 打開。如果手機詢問，請按「允許」。
+    </p>
+    <div class="progress" id="progressBar" hidden><span></span></div>
+    <p id="permissionNote" class="note note-error" hidden></p>
+
+    <section class="verdict" id="verdictBox" aria-live="polite">
+      <p class="label">判定</p>
+      <p class="title" id="verdictTitle">尚未檢查</p>
+      <p class="detail" id="verdictDetail">三項都有，才可以加入研究。</p>
+      <p class="detail" id="desktopHint" hidden>這看起來像電腦。請改用手機瀏覽器打開再檢查一次。</p>
+    </section>
+
+    <section>
+      <div class="info-card">
+        <p class="k">裝置型號代碼</p>
+        <p class="en">Device Model ID</p>
+        <p class="v" id="modelId">讀取中…</p>
+        <p class="hint-line" id="modelHint" hidden></p>
+      </div>
+      <div class="info-card" style="margin-top:0.75rem">
+        <p class="k">裝置名稱</p>
+        <p class="en">Device Model Name</p>
+        <p class="v" id="modelName">讀取中…</p>
+        <p class="hint-line" id="platformLabel"></p>
+      </div>
+    </section>
+
+    <section>
+      <p class="section-label">偵測到的硬件 · Detected hardware</p>
+
+      <article class="sensor-card" data-key="gyroscope">
+        <div class="sensor-head">
+          <span class="sensor-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.22-8.56"/><path d="M21 3v5h-5"/></svg>
+          </span>
+          <div>
+            <h3>陀螺儀</h3>
+            <p>Gyroscope</p>
+          </div>
+        </div>
+        <div class="sensor-actions">
+          <span class="pill pill-pending" data-pill>未檢查</span>
+          <button type="button" class="details-btn" data-details disabled>詳細資料</button>
+        </div>
+        <div class="details-panel" data-panel>
+          <p data-summary>尚未檢查。</p>
+          <div data-live></div>
+        </div>
+      </article>
+
+      <article class="sensor-card" data-key="magnetometer">
+        <div class="sensor-head">
+          <span class="sensor-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          </span>
+          <div>
+            <h3>磁力計</h3>
+            <p>Magnetometer</p>
+          </div>
+        </div>
+        <div class="sensor-actions">
+          <span class="pill pill-pending" data-pill>未檢查</span>
+          <button type="button" class="details-btn" data-details disabled>詳細資料</button>
+        </div>
+        <div class="details-panel" data-panel>
+          <p data-summary>尚未檢查。</p>
+          <div data-live></div>
+        </div>
+      </article>
+
+      <article class="sensor-card" data-key="accelerometer">
+        <div class="sensor-head">
+          <span class="sensor-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </span>
+          <div>
+            <h3>加速度計</h3>
+            <p>Accelerometer</p>
+          </div>
+        </div>
+        <div class="sensor-actions">
+          <span class="pill pill-pending" data-pill>未檢查</span>
+          <button type="button" class="details-btn" data-details disabled>詳細資料</button>
+        </div>
+        <div class="details-panel" data-panel>
+          <p data-summary>尚未檢查。</p>
+          <div data-live></div>
+        </div>
+      </article>
+    </section>
+
+    <details class="researcher">
+      <summary>給研究人員</summary>
+      <div class="body" id="researcherBody">
+        <p>平台：讀取中…</p>
+      </div>
+    </details>
+  </main>
+
+  <script>
+(function () {
+  "use strict";
+
+  var CHECK_MS = 3000;
+  var KEYS = ["gyroscope", "magnetometer", "accelerometer"];
+  var LABELS = {
+    gyroscope: "陀螺儀",
+    magnetometer: "磁力計",
+    accelerometer: "加速度計"
+  };
+
+  var state = {
+    phase: "idle",
+    slots: {
+      gyroscope: { status: "pending", summary: "尚未檢查。" },
+      magnetometer: { status: "pending", summary: "尚未檢查。" },
+      accelerometer: { status: "pending", summary: "尚未檢查。" }
+    },
+    live: {
+      accelerometer: null,
+      gyroscope: null,
+      magnetometer: null,
+      heading: null,
+      headingUnreliable: false
+    },
+    permissionNote: null,
+    debugLines: [],
+    device: null,
+    openKey: null
+  };
+
+  var stopFns = [];
+  var emitTimer = null;
+
+  function $(id) { return document.getElementById(id); }
+
+  function formatNum(v, digits) {
+    if (v === null || v === undefined || !isFinite(v)) return "—";
+    return Number(v).toFixed(digits == null ? 2 : digits);
+  }
+
+  function magnitude(axis) {
+    if (!axis || axis.x == null || axis.y == null || axis.z == null) return null;
+    return Math.hypot(axis.x, axis.y, axis.z);
+  }
+
+  function isComplete(axis) {
+    return !!(axis && axis.x != null && axis.y != null && axis.z != null);
+  }
+
+  function finite(v) {
+    return typeof v === "number" && isFinite(v) ? v : null;
+  }
+
+  function readAxis(src) {
+    if (!src) return null;
+    var axis = { x: finite(src.x), y: finite(src.y), z: finite(src.z) };
+    if (axis.x == null && axis.y == null && axis.z == null) return null;
+    return axis;
+  }
+
+  function toDegrees(axis) {
+    if (!axis) return null;
+    function c(v) { return v == null ? null : (v * 180) / Math.PI; }
+    return { x: c(axis.x), y: c(axis.y), z: c(axis.z) };
+  }
+
+  function judgeAccelerometer(samples) {
+    var mags = samples.map(magnitude).filter(function (v) { return v != null; });
+    if (mags.some(function (v) { return v >= 5 && v <= 15; })) {
+      return { status: "yes", summary: "有讀到加速度。手機靜止時，數字大約是 9.8。" };
+    }
+    if (mags.filter(function (v) { return v > 0.3; }).length >= 3) {
+      return { status: "yes", summary: "有讀到加速度數值。" };
+    }
+    if (mags.length === 0) return { status: "no", summary: "沒有讀到加速度。" };
+    return { status: "no", summary: "加速度一直是 0，瀏覽器可能沒有開放這項感應器。" };
+  }
+
+  function judgeGyroscope(samples) {
+    var complete = samples.filter(isComplete);
+    if (complete.length === 0) return { status: "no", summary: "沒有讀到旋轉速度。" };
+    var peak = Math.max.apply(null, complete.map(function (a) {
+      return Math.hypot(a.x, a.y, a.z);
+    }));
+    if (peak > 1) {
+      return { status: "yes", summary: "有讀到旋轉速度。轉動手機時，數字會變大。" };
+    }
+    if (complete.length >= 3) {
+      return { status: "yes", summary: "有陀螺儀。手機沒有轉動時，數字接近 0 是正常的。" };
+    }
+    return { status: "no", summary: "旋轉資料太少。請再檢查一次，並把手機轉一轉。" };
+  }
+
+  function judgeMagnetometer(input) {
+    var mags = input.fields.map(magnitude).filter(function (v) { return v != null; });
+    if (mags.some(function (v) { return v >= 10 && v <= 100; }) ||
+        mags.filter(function (v) { return v > 5; }).length >= 3) {
+      return { status: "yes", summary: "有讀到磁場。附近的地磁大約是幾十微特斯拉。" };
+    }
+    var good = input.headings.filter(function (h) { return !h.unreliable; });
+    if (good.length > 0) {
+      return { status: "yes", summary: "有讀到指南針方向，磁力計可用。" };
+    }
+    if (input.absoluteReading) {
+      return { status: "yes", summary: "有絕對方向資料，磁力計可用。" };
+    }
+    if (input.headings.some(function (h) { return h.unreliable; })) {
+      return {
+        status: "no",
+        summary: "指南針不準。請打開定位，把手機在空中畫「8」字，再檢查一次。"
+      };
+    }
+    return { status: "no", summary: "沒有讀到磁場或指南針方向。" };
+  }
+
+  function verdictCopy() {
+    if (state.phase === "idle") {
+      return { title: "尚未檢查", detail: "三項都有，才可以加入研究。", tone: "idle" };
+    }
+    if (state.phase === "checking") {
+      return { title: "正在檢查", detail: "請把手機慢慢轉一圈。", tone: "checking" };
+    }
+    var missing = KEYS.filter(function (k) {
+      return state.slots[k].status !== "yes";
+    }).map(function (k) { return LABELS[k]; });
+    if (missing.length === 0) {
+      return {
+        title: "此手機可以加入研究",
+        detail: "陀螺儀、磁力計、加速度計都有讀到資料。",
+        tone: "yes"
+      };
+    }
+    return {
+      title: "此手機無法加入研究",
+      detail: "缺少：" + missing.join("、") + "。",
+      tone: "no"
+    };
+  }
+
+  function setPill(el, status) {
+    el.className = "pill";
+    if (status === "yes") {
+      el.classList.add("pill-yes");
+      el.textContent = "有 Yes";
+    } else if (status === "no") {
+      el.classList.add("pill-no");
+      el.textContent = "無 No";
+    } else if (status === "checking") {
+      el.classList.add("pill-checking");
+      el.textContent = "檢查中";
+    } else {
+      el.classList.add("pill-pending");
+      el.textContent = "未檢查";
+    }
+  }
+
+  function meterHtml(label, value, unit) {
+    return (
+      '<div class="meter"><span>' + label + '</span><span class="num">' +
+      formatNum(value) + '<span class="unit">' + unit + "</span></span></div>"
+    );
+  }
+
+  function liveHtml(key) {
+    var live = state.live;
+    if (key === "accelerometer") {
+      var a = live.accelerometer;
+      var dx = Math.max(-1, Math.min(1, ((a && a.x) || 0) / 6)) * 48;
+      var dy = Math.max(-1, Math.min(1, ((a && a.y) || 0) / 6)) * 48;
+      return (
+        '<div class="level"><span class="level-center"></span>' +
+        '<span class="level-dot" style="transform:translate(' + dx + "px," + dy + 'px)"></span></div>' +
+        '<p style="font-size:1.125rem;color:var(--muted)">傾斜手機，圓點會跟著動。</p>' +
+        meterHtml("左右", a && a.x, "m/s²") +
+        meterHtml("上下", a && a.y, "m/s²") +
+        meterHtml("前後", a && a.z, "m/s²")
+      );
+    }
+    if (key === "gyroscope") {
+      var g = live.gyroscope;
+      return (
+        '<p style="font-size:1.125rem;color:var(--muted)">轉動手機時，下面的數字會變。單位是度／秒。</p>' +
+        meterHtml("平轉", g && g.x, "°/秒") +
+        meterHtml("前後轉", g && g.y, "°/秒") +
+        meterHtml("側轉", g && g.z, "°/秒")
+      );
+    }
+    var field = live.magnetometer;
+    var strength = magnitude(field);
+    var html = "";
+    if (live.heading == null) {
+      html += "<p>還沒有方向數字。</p>";
+    } else {
+      html +=
+        '<div class="compass">' +
+        '<span class="compass-label n">北</span>' +
+        '<span class="compass-label s">南</span>' +
+        '<div class="compass-needle" style="transform:rotate(' + live.heading + 'deg)">' +
+        '<span class="north"></span><span class="hub"></span><span class="south"></span></div></div>' +
+        '<p class="heading-num">' + Math.round(live.heading) + "°</p>" +
+        '<p style="font-size:1.125rem;color:' + (live.headingUnreliable ? "var(--no)" : "var(--muted)") + '">' +
+        (live.headingUnreliable
+          ? "方向不準。請把手機畫「8」字校正。"
+          : "針指向手機正面所對的方向。") +
+        "</p>";
+    }
+    if (field) {
+      html +=
+        meterHtml("磁場強度", strength, "µT") +
+        meterHtml("X", field.x, "µT") +
+        meterHtml("Y", field.y, "µT") +
+        meterHtml("Z", field.z, "µT");
+    } else {
+      html += '<p style="font-size:1.125rem;color:var(--muted)">這支手機如果只有指南針方向，就不會顯示磁場的三個數字。</p>';
+    }
+    return html;
+  }
+
+  function render() {
+    var v = verdictCopy();
+    var box = $("verdictBox");
+    box.className = "verdict" + (v.tone !== "idle" ? " " + v.tone : "");
+    $("verdictTitle").textContent = v.title;
+    $("verdictDetail").textContent = v.detail;
+
+    var desktopHint = $("desktopHint");
+    if (state.phase === "done" && state.device && !state.device.mobile) {
+      desktopHint.hidden = false;
+    } else {
+      desktopHint.hidden = true;
+    }
+
+    $("startBtn").disabled = state.phase === "checking";
+    $("startBtn").textContent =
+      state.phase === "checking" ? "檢查中…" :
+      state.phase === "done" ? "再檢查一次" : "開始檢查";
+
+    $("hintText").textContent =
+      state.phase === "checking"
+        ? "請把手機拿起來，慢慢轉一圈。大約三秒。"
+        : state.phase === "done"
+          ? "可以按「詳細資料」，看即時數字。"
+          : "請用手機的 Chrome 或 Safari 打開。如果手機詢問，請按「允許」。";
+
+    $("progressBar").hidden = state.phase !== "checking";
+
+    if (state.permissionNote) {
+      $("permissionNote").hidden = false;
+      $("permissionNote").textContent = state.permissionNote;
+    } else {
+      $("permissionNote").hidden = true;
+    }
+
+    if (state.device) {
+      $("modelId").textContent = state.device.modelId;
+      $("modelName").textContent = state.device.modelName;
+      $("platformLabel").textContent = state.device.platformLabel || "";
+      if (state.device.modelHint) {
+        $("modelHint").hidden = false;
+        $("modelHint").textContent = state.device.modelHint;
+      } else {
+        $("modelHint").hidden = true;
+      }
+    }
+
+    KEYS.forEach(function (key) {
+      var card = document.querySelector('.sensor-card[data-key="' + key + '"]');
+      var slot = state.slots[key];
+      setPill(card.querySelector("[data-pill]"), slot.status);
+      var btn = card.querySelector("[data-details]");
+      btn.disabled = state.phase === "idle";
+      btn.textContent = state.openKey === key ? "收起" : "詳細資料";
+      var panel = card.querySelector("[data-panel]");
+      var open = state.openKey === key;
+      panel.classList.toggle("open", open);
+      card.querySelector("[data-summary]").textContent = slot.summary;
+      if (open) {
+        card.querySelector("[data-live]").innerHTML = liveHtml(key);
+      }
+    });
+
+    var body = $("researcherBody");
+    var lines = [];
+    if (state.device) {
+      lines.push("平台：" + state.device.platformLabel);
+      lines.push(
+        "螢幕：" +
+          window.screen.width + "×" + window.screen.height +
+          " · " + (window.devicePixelRatio || 1) + "x"
+      );
+      lines.push("瀏覽器：" + state.device.userAgent);
+    }
+    state.debugLines.forEach(function (line) { lines.push(line); });
+    lines.push("結果只在這支手機上計算，沒有送到伺服器。");
+    body.innerHTML = lines.map(function (l) { return "<p>" + l + "</p>"; }).join("");
+  }
+
+  function emitSoon() {
+    if (emitTimer) return;
+    emitTimer = setTimeout(function () {
+      emitTimer = null;
+      render();
+    }, 100);
+  }
+
+  function stopAll() {
+    stopFns.forEach(function (fn) {
+      try { fn(); } catch (e) {}
+    });
+    stopFns = [];
+    if (emitTimer) {
+      clearTimeout(emitTimer);
+      emitTimer = null;
+    }
+  }
+
+  function askPermission(kind) {
+    var hostName = kind === "motion" ? "DeviceMotionEvent" : "DeviceOrientationEvent";
+    var Host = window[hostName];
+    if (!Host || typeof Host.requestPermission !== "function") {
+      return Promise.resolve("granted");
+    }
+    return Host.requestPermission().then(
+      function (r) { return r || "denied"; },
+      function () { return "denied"; }
+    );
+  }
+
+  function compassFrom(event) {
+    if (typeof event.webkitCompassHeading === "number" && isFinite(event.webkitCompassHeading)) {
+      var acc = event.webkitCompassAccuracy;
+      return {
+        deg: event.webkitCompassHeading,
+        unreliable: typeof acc === "number" && acc < 0
+      };
+    }
+    if (event.absolute && typeof event.alpha === "number" && isFinite(event.alpha)) {
+      return { deg: event.alpha, unreliable: false };
+    }
+    return null;
+  }
+
+  function humanError(name, label) {
+    if (name === "NotAllowedError") return "沒有允許讀取" + label + "。";
+    if (name === "NotReadableError" || name === "NotFoundError") {
+      return "這支手機沒有可用的" + label + "。";
+    }
+    if (name === "SecurityError") return "網頁不是安全連線，無法讀取感應器。";
+    return "";
+  }
+
+  function sensorCtor(name) {
+    return typeof window[name] === "function" ? window[name] : null;
+  }
+
+  async function readDeviceProfile() {
+    var ua = navigator.userAgent || "";
+    var uaData = navigator.userAgentData;
+    var model = "";
+    var platform = (uaData && uaData.platform) || "";
+    var platformVersion = "";
+    var mobile = !!(uaData && uaData.mobile);
+
+    try {
+      if (uaData && uaData.getHighEntropyValues) {
+        var hints = await uaData.getHighEntropyValues([
+          "model", "platform", "platformVersion", "mobile"
+        ]);
+        model = (hints.model || "").trim();
+        platform = (hints.platform || platform).trim();
+        platformVersion = (hints.platformVersion || "").trim();
+        if (typeof hints.mobile === "boolean") mobile = hints.mobile;
+      }
+    } catch (e) {}
+
+    var iosDevice = /iPad|iPhone|iPod/.test(ua);
+    var ipadDesktop = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+    var androidMatch = ua.match(/Android\s([0-9.]+);\s*([^;)]+)/);
+
+    if (!model && androidMatch) {
+      model = androidMatch[2].replace(/\s+Build\/.*$/, "").trim();
+      if (/^(Mobile|Linux|K|wv)$/i.test(model)) model = "";
+    }
+    if (!platformVersion && androidMatch) platformVersion = androidMatch[1];
+    if (iosDevice || ipadDesktop) {
+      platform = ipadDesktop || /iPad/.test(ua) ? "iPadOS" : "iOS";
+      if (!platformVersion) {
+        var m = ua.match(/OS ([0-9_]+)/);
+        platformVersion = m ? m[1].replace(/_/g, ".") : "";
+      }
+      mobile = true;
+    }
+    if (!mobile) mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
+
+    var kind = ipadDesktop || /iPad/.test(ua) ? "iPad" : iosDevice ? "iPhone" : "";
+    var apple = iosDevice || ipadDesktop;
+    var platformLabel = [platform, platformVersion].filter(Boolean).join(" ") || "無法取得";
+
+    if (apple && !model) {
+      return {
+        modelId: "無法取得",
+        modelName: kind || "iPhone",
+        modelHint: "蘋果不讓網頁看到具體型號（例如 iPhone 15）。",
+        platformLabel: platformLabel,
+        userAgent: ua,
+        mobile: mobile
+      };
+    }
+    if (!model) {
+      return {
+        modelId: "無法取得",
+        modelName: "無法取得",
+        modelHint: "這支手機的瀏覽器沒有提供型號。",
+        platformLabel: platformLabel,
+        userAgent: ua,
+        mobile: mobile
+      };
+    }
+    return {
+      modelId: model,
+      modelName: model,
+      modelHint: null,
+      platformLabel: platformLabel,
+      userAgent: ua,
+      mobile: mobile
+    };
+  }
+
+  function startCheck() {
+    stopAll();
+    state.openKey = null;
+    state.permissionNote = null;
+    state.phase = "checking";
+    state.slots = {
+      gyroscope: { status: "checking", summary: "正在聽旋轉速度。" },
+      magnetometer: { status: "checking", summary: "正在聽磁場同方向。" },
+      accelerometer: { status: "checking", summary: "正在聽加速度。" }
+    };
+    state.live = {
+      accelerometer: null,
+      gyroscope: null,
+      magnetometer: null,
+      heading: null,
+      headingUnreliable: false
+    };
+    state.debugLines = [];
+    render();
+
+    // Restart progress animation
+    var bar = $("progressBar");
+    bar.hidden = false;
+    bar.innerHTML = "<span></span>";
+
+    var accelSamples = [];
+    var gyroSamples = [];
+    var magSamples = [];
+    var headings = [];
+    var absoluteReading = false;
+    var errors = {};
+    var sources = {};
+    var orientPerm = "granted";
+    var stopped = false;
+
+    stopFns.push(function () { stopped = true; });
+
+    var motionPromise = askPermission("motion");
+    var orientPromise = askPermission("orientation");
+
+    function pushCapped(bucket, axis) {
+      if (!isComplete(axis)) return;
+      bucket.push(axis);
+      if (bucket.length > 120) bucket.shift();
+    }
+
+    function noteAccel(axis, source) {
+      if (!isComplete(axis)) return;
+      sources[source] = true;
+      state.live.accelerometer = axis;
+      pushCapped(accelSamples, axis);
+      emitSoon();
+    }
+
+    function noteGyro(axis, source) {
+      if (!isComplete(axis)) return;
+      sources[source] = true;
+      state.live.gyroscope = axis;
+      pushCapped(gyroSamples, axis);
+      emitSoon();
+    }
+
+    function noteMag(axis, source) {
+      if (!isComplete(axis)) return;
+      sources[source] = true;
+      state.live.magnetometer = axis;
+      pushCapped(magSamples, axis);
+      emitSoon();
+    }
+
+    function noteHeading(h, source) {
+      if (!h) return;
+      sources[source] = true;
+      headings.push(h);
+      if (headings.length > 120) headings.shift();
+      if (!h.unreliable || state.live.heading == null) {
+        state.live.heading = h.deg;
+        state.live.headingUnreliable = h.unreliable;
+      }
+      emitSoon();
+    }
+
+    function finish() {
+      if (stopped || state.phase === "done") return;
+
+      var gyro = judgeGyroscope(gyroSamples);
+      var mag = judgeMagnetometer({
+        fields: magSamples,
+        headings: headings,
+        absoluteReading: absoluteReading
+      });
+      var accel = judgeAccelerometer(accelSamples);
+
+      if (gyro.status !== "yes" && errors.gyroscope && gyroSamples.filter(isComplete).length === 0) {
+        gyro = { status: "no", summary: errors.gyroscope };
+      }
+      if (
+        mag.status !== "yes" &&
+        errors.magnetometer &&
+        magSamples.length === 0 &&
+        headings.length === 0 &&
+        !absoluteReading
+      ) {
+        mag = { status: "no", summary: errors.magnetometer };
+      }
+      if (accel.status !== "yes" && errors.accelerometer && accelSamples.length === 0) {
+        accel = { status: "no", summary: errors.accelerometer };
+      }
+
+      var apple =
+        /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+        (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+      if (apple && mag.status === "no" && orientPerm !== "denied") {
+        mag = {
+          status: "no",
+          summary: mag.summary + " iPhone 請打開系統的「定位服務」，再檢查一次。"
+        };
+      }
+
+      state.slots = { gyroscope: gyro, magnetometer: mag, accelerometer: accel };
+      state.phase = "done";
+      state.debugLines = [
+        "secure: " + (window.isSecureContext ? "yes" : "no"),
+        "samples accel/gyro/mag: " +
+          accelSamples.length + "/" + gyroSamples.length + "/" + magSamples.length,
+        "headings: " + headings.length,
+        "absolute orientation: " + (absoluteReading ? "yes" : "no"),
+        "sources: " + (Object.keys(sources).join(", ") || "none")
+      ];
+      Object.keys(errors).forEach(function (k) {
+        if (errors[k]) state.debugLines.push(k + " error: " + errors[k]);
+      });
+      render();
+    }
+
+    Promise.all([motionPromise, orientPromise]).then(function (perms) {
+      if (stopped) return;
+      var motionPerm = perms[0];
+      orientPerm = perms[1];
+      state.debugLines = [
+        "motion permission: " + motionPerm,
+        "orientation permission: " + orientPerm
+      ];
+
+      if (!window.isSecureContext) {
+        var summary = "這個網址不安全。請改用 https 開頭的網址再檢查。";
+        state.permissionNote = summary;
+        state.slots = {
+          gyroscope: { status: "no", summary: summary },
+          magnetometer: { status: "no", summary: summary },
+          accelerometer: { status: "no", summary: summary }
+        };
+        state.phase = "done";
+        render();
+        return;
+      }
+
+      if (motionPerm === "denied" || orientPerm === "denied") {
+        state.permissionNote = "請按允許。不允許的話，就讀不到感應器。";
+      }
+      if (motionPerm === "denied") {
+        errors.gyroscope = "您沒有允許動作感應。請再檢查一次，並選擇允許。";
+        errors.accelerometer = "您沒有允許動作感應。請再檢查一次，並選擇允許。";
+      }
+      if (orientPerm === "denied") {
+        errors.magnetometer = "您沒有允許方向感應。請再檢查一次，並選擇允許。";
+      }
+
+      function onMotion(event) {
+        noteAccel(
+          readAxis(event.accelerationIncludingGravity) || readAxis(event.acceleration),
+          "devicemotion"
+        );
+        var r = event.rotationRate;
+        noteGyro(
+          r ? readAxis({ x: r.alpha, y: r.beta, z: r.gamma }) : null,
+          "devicemotion"
+        );
+      }
+
+      function onOrientation(event) {
+        noteHeading(
+          compassFrom(event),
+          event.absolute ? "deviceorientationabsolute" : "deviceorientation"
+        );
+      }
+
+      window.addEventListener("devicemotion", onMotion);
+      window.addEventListener("deviceorientation", onOrientation);
+      window.addEventListener("deviceorientationabsolute", onOrientation);
+      stopFns.push(function () {
+        window.removeEventListener("devicemotion", onMotion);
+        window.removeEventListener("deviceorientation", onOrientation);
+        window.removeEventListener("deviceorientationabsolute", onOrientation);
+      });
+
+      function openSensor(name, key, label, onAxis) {
+        var Ctor = sensorCtor(name);
+        if (!Ctor) {
+          sources[name + ": absent"] = true;
+          return;
+        }
+        try {
+          var sensor = new Ctor({ frequency: 20 });
+          sensor.addEventListener("reading", function () {
+            onAxis(readAxis(sensor));
+          });
+          sensor.addEventListener("error", function (ev) {
+            var errName = (ev.error && ev.error.name) || "";
+            var msg = humanError(errName, label);
+            if (msg) errors[key] = msg;
+            sources[name + ": " + (errName || "error")] = true;
+          });
+          sensor.start();
+          sources[name + ": started"] = true;
+          stopFns.push(function () {
+            try { sensor.stop(); } catch (e) {}
+          });
+        } catch (err) {
+          var errName = err && err.name ? err.name : "error";
+          var msg = humanError(errName, label);
+          if (msg) errors[key] = msg;
+          sources[name + ": " + errName] = true;
+        }
+      }
+
+      openSensor("Accelerometer", "accelerometer", "加速度計", function (axis) {
+        noteAccel(axis, "Accelerometer");
+      });
+      openSensor("Gyroscope", "gyroscope", "陀螺儀", function (axis) {
+        noteGyro(toDegrees(axis), "Gyroscope");
+      });
+      openSensor("Magnetometer", "magnetometer", "磁力計", function (axis) {
+        noteMag(axis, "Magnetometer");
+      });
+
+      var Absolute = sensorCtor("AbsoluteOrientationSensor");
+      if (Absolute) {
+        try {
+          var abs = new Absolute({ frequency: 10 });
+          abs.addEventListener("reading", function () {
+            absoluteReading = true;
+            sources.AbsoluteOrientationSensor = true;
+            emitSoon();
+          });
+          abs.addEventListener("error", function (ev) {
+            sources["AbsoluteOrientationSensor: " + ((ev.error && ev.error.name) || "error")] = true;
+          });
+          abs.start();
+          stopFns.push(function () {
+            try { abs.stop(); } catch (e) {}
+          });
+        } catch (err) {
+          sources["AbsoluteOrientationSensor: " + (err && err.name ? err.name : "error")] = true;
+        }
+      }
+
+      if (motionPerm === "denied" && orientPerm === "denied" && !sensorCtor("Accelerometer")) {
+        finish();
+        return;
+      }
+
+      var timer = setTimeout(function () {
+        if (!stopped) finish();
+      }, CHECK_MS);
+      stopFns.push(function () { clearTimeout(timer); });
+      render();
+    });
+  }
+
+  // Wire UI
+  $("startBtn").addEventListener("click", startCheck);
+
+  document.querySelectorAll(".sensor-card").forEach(function (card) {
+    card.querySelector("[data-details]").addEventListener("click", function () {
+      var key = card.getAttribute("data-key");
+      state.openKey = state.openKey === key ? null : key;
+      render();
+    });
+  });
+
+  // Boot
+  try {
+    if (window.self !== window.top) $("embeddedNote").hidden = false;
+  } catch (e) {
+    $("embeddedNote").hidden = false;
+  }
+  if (!window.isSecureContext) $("insecureNote").hidden = false;
+
+  readDeviceProfile().then(function (profile) {
+    state.device = profile;
+    render();
+  });
+
+  render();
+})();
+  </script>
+</body>
+</html>
