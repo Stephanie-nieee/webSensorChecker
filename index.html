@@ -766,11 +766,7 @@
       }
 
       function startCheck() {
-        // After permission denied, reload so the next gesture can re-request cleanly
-        if (state.phase === "incomplete") {
-          window.location.reload();
-          return;
-        }
+        // 已移除 incomplete 時重新整理的限制，改為直接重新執行檢查與權限要求
 
         stopAll();
         state.openKey = null;
