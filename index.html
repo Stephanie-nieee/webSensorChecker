@@ -23,6 +23,8 @@
       --yes-bg: #e3f6ea;
       --no: #a31d2c;
       --no-bg: #fdecee;
+      --warn: #8a6d1d;
+      --warn-bg: #f5f0e0;
     }
 
     * {
@@ -146,8 +148,8 @@
     }
 
     .verdict.incomplete {
-      border-color: var(--pine);
-      background: var(--pine-soft);
+      border-color: #c4b48a;
+      background: var(--warn-bg);
     }
 
     .verdict .label {
@@ -171,9 +173,12 @@
       color: var(--no);
     }
 
-    .verdict.checking .title,
-    .verdict.incomplete .title {
+    .verdict.checking .title {
       color: var(--pine);
+    }
+
+    .verdict.incomplete .title {
+      color: var(--warn);
     }
 
     .verdict .detail {
@@ -400,7 +405,8 @@
         live: {
           accelerometer: null,
           gyroscope: null,
-          magnetometer: null
+          magnetometer: null,
+          heading: null
         },
         permissionNote: null,
         device: null,
@@ -519,6 +525,17 @@
         return "X: " + fmt(a.x) + "<br>Y: " + fmt(a.y) + "<br>Z: " + fmt(a.z);
       }
 
+      function magDetailsHtml() {
+        var a = state.live.magnetometer || { x: null, y: null, z: null };
+        var lines = [
+          "X: " + fmt(a.x) + " µT",
+          "Y: " + fmt(a.y) + " µT",
+          "Z: " + fmt(a.z) + " µT",
+          "方向: " + (state.live.heading != null ? Math.round(state.live.heading) + "°" : "—")
+        ];
+        return lines.join("<br>");
+      }
+
       function render() {
         var v = verdict();
         var box = $("verdictBox");
@@ -569,7 +586,11 @@
           var panel = card.querySelector("[data-panel]");
           var open = state.openKey === key && state.phase === "done";
           panel.classList.toggle("open", open);
-          if (open) panel.innerHTML = xyzHtml(state.live[key]);
+          if (open) {
+            panel.innerHTML = key === "magnetometer"
+              ? magDetailsHtml()
+              : xyzHtml(state.live[key]);
+          }
         });
       }
 
@@ -698,7 +719,7 @@
           magnetometer: { status: "checking" },
           accelerometer: { status: "checking" }
         };
-        state.live = { accelerometer: null, gyroscope: null, magnetometer: null };
+        state.live = { accelerometer: null, gyroscope: null, magnetometer: null, heading: null };
         render();
 
         var bar = $("progressBar");
@@ -823,6 +844,10 @@
             var h = compassFrom(ev);
             if (h) {
               headings.push(h);
+              if (!h.unreliable || state.live.heading == null) {
+                state.live.heading = h.deg;
+              }
+              emitSoon();
               tryEarlyFinish();
             }
           }
