@@ -98,7 +98,7 @@
 
     .lead {
       margin: 0;
-      font-size: 1rem;
+      font-size: 1.5rem;
       color: var(--muted);
     }
 
@@ -381,19 +381,19 @@
         <p style="font-size: 24px; font-weight: bold;">研究招募用</p>
       </div>
       <h1 style="margin-top:1rem">這手機能參加研究嗎?</h1>
-      <p class="lead" style="margin-top:1rem">請按下面的按鈕。檢查時請<strong>慢慢轉動手機</strong>。</p>
+      <p class="lead" style="margin-top:1rem">檢查時請<strong>持續轉動手機</strong></p>
     </header>
 
     <p id="embeddedNote" class="note note-warn" hidden>
-      請用手機瀏覽器直接打開這個網頁。
+      請用手機瀏覽器直接打開這個網頁
     </p>
     <p id="insecureNote" class="note note-error" hidden>
-      請用 https 開頭的網址打開。
+      請用 https 開頭的網址打開
     </p>
 
     <div class="action-card">
       <button type="button" class="primary-btn" id="startBtn">開始檢查</button>
-      <p class="hint" id="hintText">如手機詢問權限，請按「允許」。</p>
+      <p class="hint" id="hintText">如手機詢問權限，請按「允許」</p>
       <div class="directions-container" id="directionsContainer">
         <div class="progress" id="progressBar" hidden><span id="progressFill"></span></div>
         <img src="directions.jpg" alt="檢測指引" class="directions-img" />
@@ -404,7 +404,7 @@
     <section class="verdict" id="verdictBox">
       <p class="label">判定</p>
       <p class="title" id="verdictTitle">尚未檢查</p>
-      <p class="detail" id="verdictDetail">三項感應器都有，才可以參加研究。</p>
+      <p class="detail" id="verdictDetail">三項感應器都有，才可以參加研究</p>
     </section>
 
     <section>
@@ -498,13 +498,13 @@
 
       function verdict() {
         if (state.phase === "idle") {
-          return { title: "尚未檢查", detail: "三項感應器都有，才可以參加研究。", tone: "idle" };
+          return { title: "尚未檢查", detail: "三項感應器都有，才可以參加研究", tone: "idle" };
         }
         if (state.phase === "checking") {
-          return { title: "正在檢查", detail: "請慢慢轉動手機，直到完成。", tone: "checking" };
+          return { title: "正在檢查", detail: "請持續轉動手機，直到完成", tone: "checking" };
         }
         if (state.phase === "incomplete") {
-          return { title: "尚未完成檢查", detail: "請按「允許」後再試一次。", tone: "incomplete" };
+          return { title: "尚未完成檢查", detail: "請按「允許」後再試一次", tone: "incomplete" };
         }
         var no = [], unknown = [];
         KEYS.forEach(function (k) {
@@ -559,9 +559,9 @@
             (state.phase === "done" || state.phase === "incomplete") ? "再檢查一次" : "開始檢查";
 
         $("hintText").textContent =
-          state.phase === "checking" ? "請慢慢轉動手機，直到完成。" :
-            state.phase === "incomplete" ? "請按「允許 / Allow」後再檢查一次。" :
-              state.phase === "done" ? "" : "如手機詢問權限，請按「允許」。";
+          state.phase === "checking" ? "請持續轉動手機，直到完成" :
+            state.phase === "incomplete" ? "請按「允許 / Allow」後再檢查一次" :
+              state.phase === "done" ? "" : "如手機詢問權限，請按「允許」";
 
         $("progressBar").hidden = state.phase !== "checking";
 
@@ -740,7 +740,7 @@
               magnetometer: { status: "pending" },
               accelerometer: { status: "pending" }
             };
-            state.permissionNote = "請按「允許 / Allow」後再檢查一次。";
+            state.permissionNote = "請按「允許 / Allow」後再檢查一次";
             render();
             return;
           }
@@ -757,7 +757,7 @@
         Promise.all([askPermission("motion"), askPermission("orientation")]).then(function (perms) {
           if (stopped) return;
           if (!window.isSecureContext) {
-            state.permissionNote = "請用 https 開頭的網址再檢查。";
+            state.permissionNote = "請用 https 開頭的網址再檢查";
             state.slots = {
               gyroscope: { status: "unknown" },
               magnetometer: { status: "unknown" },
