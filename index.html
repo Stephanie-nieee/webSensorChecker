@@ -131,6 +131,7 @@
     .directions-container {
       width: 100%;
       text-align: center;
+      margin-bottom: 12px;
     }
 
     .directions-img {
@@ -167,7 +168,7 @@
       font-weight: 700;
       color: var(--pine);
       text-align: center;
-      margin-top: 16px
+      margin-top: 8px
     }
 
     .progress {
@@ -175,6 +176,7 @@
       border-radius: 999px;
       background: var(--line);
       overflow: hidden;
+      margin-bottom: 20px;
     }
 
     .progress>span {
@@ -356,6 +358,10 @@
       font-size: 1.25rem;
       font-variant-numeric: tabular-nums;
     }
+
+    .details-panel.open {
+      display: flex;
+    }
   </style>
 </head>
 
@@ -389,9 +395,10 @@
       <button type="button" class="primary-btn" id="startBtn">開始檢查</button>
       <p class="hint" id="hintText">如手機詢問權限，請按「允許」。</p>
       <div class="directions-container" id="directionsContainer">
+        <div class="progress" id="progressBar" hidden><span></span></div>
         <img src="directions.jpg" alt="檢測指引" class="directions-img" />
       </div>
-      <div class="progress" id="progressBar" hidden><span></span></div>
+
       <p id="permissionNote" class="note note-error" hidden></p>
     </div>
 
@@ -549,7 +556,7 @@
 
       function verdict() {
         if (state.phase === "idle") {
-          return { title: "尚未檢查", detail: "三項都有，才可以參加研究。", tone: "idle" };
+          return { title: "尚未檢查", detail: "三項感應器都有，方可參加研究。", tone: "idle" };
         }
         if (state.phase === "checking") {
           return { title: "正在檢查", detail: "請稍候...", tone: "checking" };
@@ -599,9 +606,9 @@
       function magDetailsHtml() {
         var a = state.live.magnetometer || { x: null, y: null, z: null };
         var lines = [
-          "X: " + fmt(a.x) + " µT",
-          "Y: " + fmt(a.y) + " µT",
-          "Z: " + fmt(a.z) + " µT",
+          "X: " + fmt(a.x),
+          "Y: " + fmt(a.y),
+          "Z: " + fmt(a.z),
           "方向: " + (state.live.heading != null ? Math.round(state.live.heading) + "°" : "—")
         ];
         return lines.join("<br>");
