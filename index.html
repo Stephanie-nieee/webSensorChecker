@@ -381,7 +381,7 @@
         <p style="font-size: 24px; font-weight: bold;">研究招募用</p>
       </div>
       <h1 style="margin-top:1rem">這手機能參加研究嗎?</h1>
-      <p class="lead" style="margin-top:1rem">檢查時請<strong>持續轉動手機</strong></p>
+      <p class="lead" style="margin-top:1rem">檢查時請<strong>持續移動手機</strong></p>
     </header>
 
     <p id="embeddedNote" class="note note-warn" hidden>
@@ -501,7 +501,7 @@
           return { title: "尚未檢查", detail: "三項感應器都有，才可以參加研究", tone: "idle" };
         }
         if (state.phase === "checking") {
-          return { title: "正在檢查", detail: "請持續轉動手機，直到完成", tone: "checking" };
+          return { title: "正在檢查", detail: "請持續移動手機，直到完成", tone: "checking" };
         }
         if (state.phase === "incomplete") {
           return { title: "尚未完成檢查", detail: "請按「允許」後再試一次", tone: "incomplete" };
@@ -559,7 +559,7 @@
             (state.phase === "done" || state.phase === "incomplete") ? "再檢查一次" : "開始檢查";
 
         $("hintText").textContent =
-          state.phase === "checking" ? "請持續轉動手機，直到完成" :
+          state.phase === "checking" ? "請持續移動手機，直到完成" :
             state.phase === "incomplete" ? "請按「允許 / Allow」後再檢查一次" :
               state.phase === "done" ? "" : "如手機詢問權限，請按「允許」";
 
