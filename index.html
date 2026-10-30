@@ -173,6 +173,10 @@
       margin-top: 8px;
     }
 
+    #hintText.checking {
+      color: var(--no);
+    }
+
     .progress {
       height: 0.7rem;
       border-radius: 999px;
@@ -562,6 +566,7 @@
           state.phase === "checking" ? "請持續移動手機，直到完成" :
             state.phase === "incomplete" ? "請按「允許 / Allow」後再檢查一次" :
               state.phase === "done" ? "" : "如手機詢問權限，請按「允許」";
+        $("hintText").classList.toggle("checking", state.phase === "checking");
 
         $("progressBar").hidden = state.phase !== "checking";
 
