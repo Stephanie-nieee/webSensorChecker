@@ -25,6 +25,8 @@
       --no-bg: #fdecee;
       --warn: #8a6d1d;
       --warn-bg: #f5f0e0;
+      --unknown: #5a5a5a;
+      --unknown-bg: #ececec;
     }
 
     * {
@@ -135,7 +137,7 @@
     }
 
     .directions-img {
-      width: 96%;
+      width: 100%;
       max-width: 260px;
       height: auto;
       border-radius: 8px;
@@ -168,7 +170,7 @@
       font-weight: 700;
       color: var(--pine);
       text-align: center;
-      margin-top: 8px
+      margin-top: 8px;
     }
 
     .progress {
@@ -214,6 +216,11 @@
       background: var(--warn-bg);
     }
 
+    .verdict.unknown {
+      border-color: var(--unknown);
+      background: var(--unknown-bg);
+    }
+
     .verdict .label {
       margin: 0 0 0.35rem;
       font-size: 1.05rem;
@@ -243,30 +250,20 @@
       color: var(--warn);
     }
 
+    .verdict.unknown .title {
+      color: var(--unknown);
+    }
+
     .verdict .detail {
       margin: 0.4rem 0 0;
       font-size: 1.15rem;
     }
 
-    .info-card,
     .sensor-card {
       border: 1px solid var(--line);
       background: var(--card);
       border-radius: 1.25rem;
       padding: 1rem 1.2rem;
-    }
-
-    .info-card .k {
-      margin: 0;
-      font-size: 1.05rem;
-      color: var(--muted);
-    }
-
-    .info-card .v {
-      margin: 0.2rem 0 0;
-      font-size: 1.35rem;
-      font-weight: 600;
-      word-break: break-word;
     }
 
     .section-label {
@@ -332,6 +329,11 @@
       font-weight: 600;
     }
 
+    .pill-unknown {
+      background: var(--unknown-bg);
+      color: var(--unknown);
+    }
+
     .details-btn {
       min-height: 2.75rem;
       border: 1px solid var(--line);
@@ -379,7 +381,7 @@
         <p style="font-size: 24px; font-weight: bold;">研究招募用</p>
       </div>
       <h1 style="margin-top:1rem">這手機能參加研究嗎?</h1>
-      <p class="lead" style="margin-top:1rem">請按下面的按鈕，檢查手機感應器。</p>
+      <p class="lead" style="margin-top:1rem">請按下面的按鈕。檢查時請<strong>慢慢轉動手機</strong>。</p>
     </header>
 
     <p id="embeddedNote" class="note note-warn" hidden>
@@ -390,23 +392,19 @@
     </p>
 
     <div class="action-card">
-
-
       <button type="button" class="primary-btn" id="startBtn">開始檢查</button>
       <p class="hint" id="hintText">如手機詢問權限，請按「允許」。</p>
       <div class="directions-container" id="directionsContainer">
-        <div class="progress" id="progressBar" hidden><span></span></div>
+        <div class="progress" id="progressBar" hidden><span id="progressFill"></span></div>
         <img src="directions.jpg" alt="檢測指引" class="directions-img" />
       </div>
-
       <p id="permissionNote" class="note note-error" hidden></p>
     </div>
 
     <section class="verdict" id="verdictBox">
       <p class="label">判定</p>
       <p class="title" id="verdictTitle">尚未檢查</p>
-      <p class="detail" id="verdictDetail">手機三項感應器都有，才可以參加研究。</p>
-      <p class="detail" id="desktopHint" hidden>請用手機打開再檢查一次。</p>
+      <p class="detail" id="verdictDetail">三項感應器都有，才可以參加研究。</p>
     </section>
 
     <section>
@@ -448,31 +446,15 @@
         <div class="details-panel" data-panel></div>
       </article>
     </section>
-
-    <section>
-      <p class="section-label">裝置</p>
-      <div class="info-card" style="margin-top:0.7rem">
-        <p class="k">裝置型號代碼</p>
-        <p class="v" id="modelId">讀取中…</p>
-      </div>
-      <div class="info-card" style="margin-top:0.7rem">
-        <p class="k">裝置名稱</p>
-        <p class="v" id="modelName">讀取中…</p>
-      </div>
-    </section>
   </main>
 
   <script>
     (function () {
       "use strict";
 
-      var CHECK_MS = 2000;
+      var CHECK_MS = 3000;
       var KEYS = ["gyroscope", "magnetometer", "accelerometer"];
-      var LABELS = {
-        gyroscope: "陀螺儀",
-        magnetometer: "磁力計",
-        accelerometer: "加速度計"
-      };
+      var LABELS = { gyroscope: "陀螺儀", magnetometer: "磁力計", accelerometer: "加速度計" };
 
       var state = {
         phase: "idle",
@@ -481,31 +463,17 @@
           magnetometer: { status: "pending" },
           accelerometer: { status: "pending" }
         },
-        live: {
-          accelerometer: null,
-          gyroscope: null,
-          magnetometer: null,
-          heading: null
-        },
+        live: { accelerometer: null, gyroscope: null, magnetometer: null, heading: null },
         permissionNote: null,
-        device: null,
         openKey: null
       };
 
       var stopFns = [];
       var emitTimer = null;
 
-      function $(id) {
-        return document.getElementById(id);
-      }
-
-      function num(v) {
-        return typeof v === "number" && isFinite(v) ? v : null;
-      }
-
-      function fmt(v) {
-        return v == null ? "—" : v.toFixed(2);
-      }
+      function $(id) { return document.getElementById(id); }
+      function num(v) { return typeof v === "number" && isFinite(v) ? v : null; }
+      function fmt(v) { return v == null ? "—" : v.toFixed(2); }
 
       function axis(src) {
         if (!src) return null;
@@ -518,7 +486,7 @@
         return !!(a && a.x != null && a.y != null && a.z != null);
       }
 
-      function mag(a) {
+      function magnitude(a) {
         return complete(a) ? Math.hypot(a.x, a.y, a.z) : null;
       }
 
@@ -528,74 +496,37 @@
         return { x: c(a.x), y: c(a.y), z: c(a.z) };
       }
 
-      function judgeAccel(samples) {
-        var mags = samples.map(mag).filter(function (v) { return v != null; });
-        if (mags.some(function (v) { return v >= 5 && v <= 15; })) return "yes";
-        if (mags.filter(function (v) { return v > 0.3; }).length >= 3) return "yes";
-        return "no";
-      }
-
-      function judgeGyro(samples) {
-        var ok = samples.filter(complete);
-        if (ok.length === 0) return "no";
-        var peak = Math.max.apply(null, ok.map(function (a) {
-          return Math.hypot(a.x, a.y, a.z);
-        }));
-        if (peak > 1 || ok.length >= 3) return "yes";
-        return "no";
-      }
-
-      function judgeMag(fields, headings, absolute) {
-        var mags = fields.map(mag).filter(function (v) { return v != null; });
-        if (mags.some(function (v) { return v >= 10 && v <= 100; })) return "yes";
-        if (mags.filter(function (v) { return v > 5; }).length >= 3) return "yes";
-        if (headings.some(function (h) { return !h.unreliable; })) return "yes";
-        if (absolute) return "yes";
-        return "no";
-      }
-
       function verdict() {
         if (state.phase === "idle") {
-          return { title: "尚未檢查", detail: "三項感應器都有，方可參加研究。", tone: "idle" };
+          return { title: "尚未檢查", detail: "三項感應器都有，才可以參加研究。", tone: "idle" };
         }
         if (state.phase === "checking") {
-          return { title: "正在檢查", detail: "請稍候...", tone: "checking" };
+          return { title: "正在檢查", detail: "請慢慢轉動手機，直到完成。", tone: "checking" };
         }
         if (state.phase === "incomplete") {
-          return {
-            title: "尚未完成檢查",
-            detail: "",
-            tone: "incomplete"
-          };
+          return { title: "尚未完成檢查", detail: "請按「允許」後再試一次。", tone: "incomplete" };
         }
-        var missing = KEYS.filter(function (k) {
-          return state.slots[k].status !== "yes";
-        }).map(function (k) { return LABELS[k]; });
-        if (missing.length === 0) {
+        var no = [], unknown = [];
+        KEYS.forEach(function (k) {
+          if (state.slots[k].status === "no") no.push(LABELS[k]);
+          if (state.slots[k].status === "unknown") unknown.push(LABELS[k]);
+        });
+        if (no.length === 0 && unknown.length === 0) {
           return { title: "此手機可以參加研究", detail: "", tone: "yes" };
         }
-        return {
-          title: "此手機無法參加研究",
-          detail: "缺少：" + missing.join("、"),
-          tone: "no"
-        };
+        if (no.length > 0) {
+          return { title: "此手機無法參加研究", detail: "缺少：" + no.join("、"), tone: "no" };
+        }
+        return { title: "無法確認", detail: "無法確認：" + unknown.join("、") + "。請改用 Chrome 或 Safari 再試。", tone: "unknown" };
       }
 
       function setPill(el, status) {
         el.className = "pill";
-        if (status === "yes") {
-          el.classList.add("pill-yes");
-          el.textContent = "有 Yes";
-        } else if (status === "no") {
-          el.classList.add("pill-no");
-          el.textContent = "無 No";
-        } else if (status === "checking") {
-          el.classList.add("pill-checking");
-          el.textContent = "檢查中";
-        } else {
-          el.classList.add("pill-pending");
-          el.textContent = "未檢查";
-        }
+        if (status === "yes") { el.classList.add("pill-yes"); el.textContent = "有 Yes"; }
+        else if (status === "no") { el.classList.add("pill-no"); el.textContent = "無 No"; }
+        else if (status === "unknown") { el.classList.add("pill-unknown"); el.textContent = "無法確認"; }
+        else if (status === "checking") { el.classList.add("pill-checking"); el.textContent = "檢查中"; }
+        else { el.classList.add("pill-pending"); el.textContent = "未檢查"; }
       }
 
       function xyzHtml(a) {
@@ -605,13 +536,10 @@
 
       function magDetailsHtml() {
         var a = state.live.magnetometer || { x: null, y: null, z: null };
-        var lines = [
-          "X: " + fmt(a.x),
-          "Y: " + fmt(a.y),
-          "Z: " + fmt(a.z),
+        return [
+          "X: " + fmt(a.x), "Y: " + fmt(a.y), "Z: " + fmt(a.z),
           "方向: " + (state.live.heading != null ? Math.round(state.live.heading) + "°" : "—")
-        ];
-        return lines.join("<br>");
+        ].join("<br>");
       }
 
       function render() {
@@ -622,27 +550,18 @@
         $("verdictDetail").textContent = v.detail;
         $("verdictDetail").hidden = !v.detail;
 
-        // 控制 directions-container 僅在 idle、checking、incomplete 時顯示，當 done 時隱藏
         var directionsEl = $("directionsContainer");
-        if (directionsEl) {
-          directionsEl.hidden = (state.phase === "done");
-        }
-
-        $("desktopHint").hidden = !(
-          state.phase === "done" && state.device && !state.device.mobile
-        );
+        if (directionsEl) directionsEl.hidden = (state.phase === "done");
 
         $("startBtn").disabled = state.phase === "checking";
         $("startBtn").textContent =
           state.phase === "checking" ? "檢查中…" :
-            (state.phase === "done" || state.phase === "incomplete") ? "再檢查一次" :
-              "開始檢查";
+            (state.phase === "done" || state.phase === "incomplete") ? "再檢查一次" : "開始檢查";
 
         $("hintText").textContent =
-          state.phase === "checking" ? "請稍候..." :
-            state.phase === "incomplete" ? "請按「允許 / Allow」以手機檢查感應器" :
-              state.phase === "done" ? "" :
-                `如手機詢問權限，請按「允許」`;
+          state.phase === "checking" ? "請慢慢轉動手機，直到完成。" :
+            state.phase === "incomplete" ? "請按「允許 / Allow」後再檢查一次。" :
+              state.phase === "done" ? "" : "如手機詢問權限，請按「允許」。";
 
         $("progressBar").hidden = state.phase !== "checking";
 
@@ -653,56 +572,37 @@
           $("permissionNote").hidden = true;
         }
 
-        if (state.device) {
-          $("modelId").textContent = state.device.modelId;
-          $("modelName").textContent = state.device.modelName;
-        }
-
         KEYS.forEach(function (key) {
           var card = document.querySelector('.sensor-card[data-key="' + key + '"]');
           setPill(card.querySelector("[data-pill]"), state.slots[key].status);
-
           var btn = card.querySelector("[data-details]");
           btn.disabled = state.phase !== "done";
           btn.textContent = state.openKey === key ? "收起" : "詳細資料";
-
           var panel = card.querySelector("[data-panel]");
           var open = state.openKey === key && state.phase === "done";
           panel.classList.toggle("open", open);
           if (open) {
-            panel.innerHTML = key === "magnetometer"
-              ? magDetailsHtml()
-              : xyzHtml(state.live[key]);
+            panel.innerHTML = key === "magnetometer" ? magDetailsHtml() : xyzHtml(state.live[key]);
           }
         });
       }
 
       function emitSoon() {
         if (emitTimer) return;
-        emitTimer = setTimeout(function () {
-          emitTimer = null;
-          render();
-        }, 100);
+        emitTimer = setTimeout(function () { emitTimer = null; render(); }, 100);
       }
 
       function stopAll() {
-        stopFns.forEach(function (fn) {
-          try { fn(); } catch (e) { }
-        });
+        stopFns.forEach(function (fn) { try { fn(); } catch (e) { } });
         stopFns = [];
-        if (emitTimer) {
-          clearTimeout(emitTimer);
-          emitTimer = null;
-        }
+        if (emitTimer) { clearTimeout(emitTimer); emitTimer = null; }
         stopProgressBar();
       }
 
       function askPermission(kind) {
         var name = kind === "motion" ? "DeviceMotionEvent" : "DeviceOrientationEvent";
         var Host = window[name];
-        if (!Host || typeof Host.requestPermission !== "function") {
-          return Promise.resolve("granted");
-        }
+        if (!Host || typeof Host.requestPermission !== "function") return Promise.resolve("granted");
         return Host.requestPermission().then(
           function (r) { return r || "denied"; },
           function () { return "denied"; }
@@ -712,57 +612,17 @@
       function compassFrom(ev) {
         if (typeof ev.webkitCompassHeading === "number" && isFinite(ev.webkitCompassHeading)) {
           var acc = ev.webkitCompassAccuracy;
-          return {
-            deg: ev.webkitCompassHeading,
-            unreliable: typeof acc === "number" && acc < 0
-          };
+          return { deg: ev.webkitCompassHeading, reliable: !(typeof acc === "number" && acc < 0) };
         }
+        // Only absolute alpha counts; relative alpha is NOT magnetometer evidence.
         if (ev.absolute && typeof ev.alpha === "number" && isFinite(ev.alpha)) {
-          return { deg: ev.alpha, unreliable: false };
+          return { deg: ev.alpha, reliable: true };
         }
         return null;
       }
 
       function sensorCtor(name) {
         return typeof window[name] === "function" ? window[name] : null;
-      }
-
-      async function readDevice() {
-        var ua = navigator.userAgent || "";
-        var uaData = navigator.userAgentData;
-        var model = "";
-        var mobile = !!(uaData && uaData.mobile);
-
-        try {
-          if (uaData && uaData.getHighEntropyValues) {
-            var hints = await uaData.getHighEntropyValues(["model", "mobile"]);
-            model = (hints.model || "").trim();
-            if (typeof hints.mobile === "boolean") mobile = hints.mobile;
-          }
-        } catch (e) { }
-
-        var ios = /iPad|iPhone|iPod/.test(ua);
-        var ipad = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
-        var android = ua.match(/Android\s[0-9.]+;\s*([^;)]+)/);
-
-        if (!model && android) {
-          model = android[1].replace(/\s+Build\/.*$/, "").trim();
-          if (/^(Mobile|Linux|K|wv)$/i.test(model)) model = "";
-        }
-        if (ios || ipad) mobile = true;
-        if (!mobile) mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
-
-        if ((ios || ipad) && !model) {
-          return {
-            modelId: "無法取得",
-            modelName: ipad || /iPad/.test(ua) ? "iPad" : "iPhone",
-            mobile: mobile
-          };
-        }
-        if (!model) {
-          return { modelId: "無法取得", modelName: "無法取得", mobile: mobile };
-        }
-        return { modelId: model, modelName: model, mobile: mobile };
       }
 
       var progressTimer = null;
@@ -781,12 +641,69 @@
       }
 
       function stopProgressBar() {
-        if (progressTimer) {
-          clearInterval(progressTimer);
-          progressTimer = null;
-        }
+        if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
         var fill = document.getElementById("progressFill");
         if (fill) fill.style.width = "100%";
+      }
+
+      // ---------- per-sensor evidence ----------
+      var ev = null; // evidence object for current run
+
+      function newEvidence() {
+        return {
+          // gyro
+          gyroApiExists: !!sensorCtor("Gyroscope"),
+          gyroSensorFired: false,
+          gyroNumericEvents: 0,
+          gyroMoved: false,
+          gyroMaxAbs: 0,
+          // accel
+          accelApiExists: !!sensorCtor("Accelerometer"),
+          accelSensorFired: false,
+          accelCompleteSamples: 0,
+          accelInGravityBand: 0,
+          accelMinMag: Infinity,
+          accelMaxMag: -Infinity,
+          // mag
+          magApiExists: !!sensorCtor("Magnetometer"),
+          magSensorFired: false,
+          magReliableHeading: false,
+          magAbsoluteSensor: false
+        };
+      }
+
+      function judgeGyro() {
+        // Rule 1: Generic Gyroscope fired => definitive.
+        if (ev.gyroSensorFired) return "yes";
+        // Rule 2: API exists but never fired => do NOT trust devicemotion rotationRate.
+        if (ev.gyroApiExists && !ev.gyroSensorFired) return "no";
+        // Rule 3: No Generic Sensor API (iOS Safari). Require motion + real variation.
+        if (ev.gyroNumericEvents >= 2 && ev.gyroMoved && ev.gyroMaxAbs >= 20) return "yes";
+        // If the browser has no gyro API at all and no motion evidence:
+        if (!ev.gyroApiExists && ev.gyroNumericEvents === 0 && !ev.gyroMoved) return "unknown";
+        return "no";
+      }
+
+      function judgeAccel() {
+        if (ev.accelSensorFired) return "yes";
+        if (ev.accelApiExists && !ev.accelSensorFired) return "no";
+        // Event fallback: need complete samples inside plausible gravity band,
+        // AND the magnitude must actually vary across samples (proves live sensor,
+        // rejects constant placeholder values).
+        var varies = isFinite(ev.accelMinMag) && isFinite(ev.accelMaxMag) &&
+          (ev.accelMaxMag - ev.accelMinMag) >= 0.05;
+        if (ev.accelInGravityBand >= 2 && varies) return "yes";
+        if (!ev.accelApiExists && ev.accelCompleteSamples === 0) return "unknown";
+        return "no";
+      }
+
+      function judgeMag() {
+        if (ev.magSensorFired) return "yes";
+        if (ev.magAbsoluteSensor) return "yes";
+        if (ev.magReliableHeading) return "yes";
+        if (ev.magApiExists && !ev.magSensorFired) return "no";
+        if (!ev.magApiExists) return "unknown";
+        return "no";
       }
 
       function startCheck() {
@@ -800,63 +717,16 @@
           accelerometer: { status: "checking" }
         };
         state.live = { accelerometer: null, gyroscope: null, magnetometer: null, heading: null };
+        ev = newEvidence();
         render();
 
         var bar = $("progressBar");
         bar.hidden = false;
-        bar.innerHTML = '<span id="progressFill"></span>';
         startProgressBar();
 
-        var accelSamples = [];
-        var gyroSamples = [];
-        var magSamples = [];
-        var headings = [];
-        var absolute = false;
         var stopped = false;
         var finished = false;
-
         stopFns.push(function () { stopped = true; });
-
-        function push(bucket, a) {
-          if (!complete(a)) return;
-          bucket.push(a);
-          if (bucket.length > 120) bucket.shift();
-        }
-
-        function noteAccel(a) {
-          if (!complete(a)) return;
-          state.live.accelerometer = a;
-          push(accelSamples, a);
-          emitSoon();
-          tryEarlyFinish();
-        }
-
-        function noteGyro(a) {
-          if (!complete(a)) return;
-          state.live.gyroscope = a;
-          push(gyroSamples, a);
-          emitSoon();
-          tryEarlyFinish();
-        }
-
-        function noteMag(a) {
-          if (!complete(a)) return;
-          state.live.magnetometer = a;
-          push(magSamples, a);
-          emitSoon();
-          tryEarlyFinish();
-        }
-
-        // function tryEarlyFinish() {
-        //   if (finished || stopped) return;
-        //   if (
-        //     judgeGyro(gyroSamples) === "yes" &&
-        //     judgeAccel(accelSamples) === "yes" &&
-        //     judgeMag(magSamples, headings, absolute) === "yes"
-        //   ) {
-        //     finish("done");
-        //   }
-        // }
 
         function finish(phase) {
           if (finished || stopped) return;
@@ -870,19 +740,15 @@
               magnetometer: { status: "pending" },
               accelerometer: { status: "pending" }
             };
-            state.permissionNote = "請按「允許 / Allow」以手機檢查感應器";
+            state.permissionNote = "請按「允許 / Allow」後再檢查一次。";
             render();
             return;
           }
 
-          var gyro = judgeGyro(gyroSamples);
-          var mag = judgeMag(magSamples, headings, absolute);
-          var accel = judgeAccel(accelSamples);
-
           state.slots = {
-            gyroscope: { status: gyro },
-            magnetometer: { status: mag },
-            accelerometer: { status: accel }
+            gyroscope: { status: judgeGyro() },
+            magnetometer: { status: judgeMag() },
+            accelerometer: { status: judgeAccel() }
           };
           state.phase = "done";
           render();
@@ -890,42 +756,57 @@
 
         Promise.all([askPermission("motion"), askPermission("orientation")]).then(function (perms) {
           if (stopped) return;
-          var motionPerm = perms[0];
-          var orientPerm = perms[1];
-
           if (!window.isSecureContext) {
             state.permissionNote = "請用 https 開頭的網址再檢查。";
             state.slots = {
-              gyroscope: { status: "no" },
-              magnetometer: { status: "no" },
-              accelerometer: { status: "no" }
+              gyroscope: { status: "unknown" },
+              magnetometer: { status: "unknown" },
+              accelerometer: { status: "unknown" }
             };
             state.phase = "done";
             finished = true;
             render();
             return;
           }
+          if (perms[0] === "denied" || perms[1] === "denied") { finish("incomplete"); return; }
 
-          if (motionPerm === "denied" || orientPerm === "denied") {
-            finish("incomplete");
-            return;
-          }
-
-          function onMotion(ev) {
-            noteAccel(axis(ev.accelerationIncludingGravity) || axis(ev.acceleration));
-            var r = ev.rotationRate;
-            noteGyro(r ? axis({ x: r.alpha, y: r.beta, z: r.gamma }) : null);
-          }
-
-          function onOrient(ev) {
-            var h = compassFrom(ev);
-            if (h) {
-              headings.push(h);
-              if (!h.unreliable || state.live.heading == null) {
-                state.live.heading = h.deg;
+          function onMotion(e) {
+            var a = axis(e.accelerationIncludingGravity) || axis(e.acceleration);
+            if (complete(a)) {
+              state.live.accelerometer = a;
+              ev.accelCompleteSamples += 1;
+              var m = magnitude(a);
+              if (m != null) {
+                if (m >= 5 && m <= 15) ev.accelInGravityBand += 1;
+                if (m < ev.accelMinMag) ev.accelMinMag = m;
+                if (m > ev.accelMaxMag) ev.accelMaxMag = m;
               }
               emitSoon();
-              tryEarlyFinish();
+            }
+            var r = e.rotationRate;
+            if (r && typeof r === "object") {
+              var numeric =
+                typeof r.alpha === "number" ||
+                typeof r.beta === "number" ||
+                typeof r.gamma === "number";
+              if (numeric) ev.gyroNumericEvents += 1;
+              var g = axis({ x: r.alpha, y: r.beta, z: r.gamma });
+              if (complete(g)) {
+                state.live.gyroscope = g;
+                var mx = Math.max(Math.abs(g.x), Math.abs(g.y), Math.abs(g.z));
+                if (mx > ev.gyroMaxAbs) ev.gyroMaxAbs = mx;
+                if (mx >= 20) ev.gyroMoved = true;
+                emitSoon();
+              }
+            }
+          }
+
+          function onOrient(e) {
+            var h = compassFrom(e);
+            if (h) {
+              if (h.reliable) ev.magReliableHeading = true;
+              if (state.live.heading == null || h.reliable) state.live.heading = h.deg;
+              emitSoon();
             }
           }
 
@@ -938,41 +819,66 @@
             window.removeEventListener("deviceorientationabsolute", onOrient);
           });
 
-          function openSensor(name, onRead) {
+          function openSensor(name, onRead, markFired) {
             var Ctor = sensorCtor(name);
             if (!Ctor) return;
             try {
               var s = new Ctor({ frequency: 20 });
-              s.addEventListener("reading", function () { onRead(axis(s)); });
+              s.addEventListener("reading", function () { markFired(); onRead(axis(s)); });
               s.start();
-              stopFns.push(function () {
-                try { s.stop(); } catch (e) { }
-              });
+              stopFns.push(function () { try { s.stop(); } catch (e) { } });
             } catch (e) { }
           }
 
-          openSensor("Accelerometer", noteAccel);
-          openSensor("Gyroscope", function (a) { noteGyro(toDeg(a)); });
-          openSensor("Magnetometer", noteMag);
+          openSensor("Accelerometer",
+            function (a) {
+              if (!complete(a)) return;
+              state.live.accelerometer = a;
+              ev.accelCompleteSamples += 1;
+              var m = magnitude(a);
+              if (m != null) {
+                if (m >= 5 && m <= 15) ev.accelInGravityBand += 1;
+                if (m < ev.accelMinMag) ev.accelMinMag = m;
+                if (m > ev.accelMaxMag) ev.accelMaxMag = m;
+              }
+              emitSoon();
+            },
+            function () { ev.accelSensorFired = true; }
+          );
+
+          openSensor("Gyroscope",
+            function (a) {
+              var d = toDeg(a);
+              if (!complete(d)) return;
+              state.live.gyroscope = d;
+              var mx = Math.max(Math.abs(d.x), Math.abs(d.y), Math.abs(d.z));
+              if (mx > ev.gyroMaxAbs) ev.gyroMaxAbs = mx;
+              if (mx >= 20) ev.gyroMoved = true;
+              emitSoon();
+            },
+            function () { ev.gyroSensorFired = true; }
+          );
+
+          openSensor("Magnetometer",
+            function (a) {
+              if (!complete(a)) return;
+              state.live.magnetometer = a;
+              emitSoon();
+            },
+            function () { ev.magSensorFired = true; }
+          );
 
           var Abs = sensorCtor("AbsoluteOrientationSensor");
           if (Abs) {
             try {
               var s = new Abs({ frequency: 10 });
-              s.addEventListener("reading", function () {
-                absolute = true;
-                tryEarlyFinish();
-              });
+              s.addEventListener("reading", function () { ev.magAbsoluteSensor = true; });
               s.start();
-              stopFns.push(function () {
-                try { s.stop(); } catch (e) { }
-              });
+              stopFns.push(function () { try { s.stop(); } catch (e) { } });
             } catch (e) { }
           }
 
-          var t = setTimeout(function () {
-            if (!stopped && !finished) finish("done");
-          }, CHECK_MS);
+          var t = setTimeout(function () { if (!stopped && !finished) finish("done"); }, CHECK_MS);
           stopFns.push(function () { clearTimeout(t); });
           render();
         });
@@ -988,17 +894,9 @@
         });
       });
 
-      try {
-        if (window.self !== window.top) $("embeddedNote").hidden = false;
-      } catch (e) {
-        $("embeddedNote").hidden = false;
-      }
+      try { if (window.self !== window.top) $("embeddedNote").hidden = false; }
+      catch (e) { $("embeddedNote").hidden = false; }
       if (!window.isSecureContext) $("insecureNote").hidden = false;
-
-      readDevice().then(function (d) {
-        state.device = d;
-        render();
-      });
 
       render();
     })();
