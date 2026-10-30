@@ -135,7 +135,7 @@
     }
 
     .directions-img {
-      width: 80%;
+      width: 96%;
       max-width: 260px;
       height: auto;
       border-radius: 8px;
@@ -642,7 +642,7 @@
           state.phase === "checking" ? "請稍候..." :
             state.phase === "incomplete" ? "請按「允許 / Allow」以手機檢查感應器" :
               state.phase === "done" ? "" :
-                "如果手機詢問權限，請按「允許」。";
+                `如手機詢問權限，請按「允許」`;
 
         $("progressBar").hidden = state.phase !== "checking";
 
@@ -847,16 +847,16 @@
           tryEarlyFinish();
         }
 
-        function tryEarlyFinish() {
-          if (finished || stopped) return;
-          if (
-            judgeGyro(gyroSamples) === "yes" &&
-            judgeAccel(accelSamples) === "yes" &&
-            judgeMag(magSamples, headings, absolute) === "yes"
-          ) {
-            finish("done");
-          }
-        }
+        // function tryEarlyFinish() {
+        //   if (finished || stopped) return;
+        //   if (
+        //     judgeGyro(gyroSamples) === "yes" &&
+        //     judgeAccel(accelSamples) === "yes" &&
+        //     judgeMag(magSamples, headings, absolute) === "yes"
+        //   ) {
+        //     finish("done");
+        //   }
+        // }
 
         function finish(phase) {
           if (finished || stopped) return;
